@@ -27,6 +27,7 @@ Se nenhum argumento for passado, analise o que mudou recentemente e sugira o que
 - Documentar uma API ou interface pública
 - Criar ADR (Architecture Decision Record)
 - Documentar fluxo de dados ou diagrama
+- Criar ou atualizar especificação OpenAPI (obrigatório quando o projeto expõe endpoints HTTP)
 
 ### Passo 2 — Para documentação estrutural, apresente o mini-plano
 
@@ -59,6 +60,14 @@ Posso prosseguir?
 - Para README: inclua sempre como instalar, como rodar, como testar
 - Para comentários no código: documente o POR QUÊ, não o O QUÊ
 - Não crie documentação para código que não existe ainda
+
+**Regra obrigatória — endpoints HTTP:**
+Se o projeto expõe endpoints HTTP (REST, GraphQL, etc.), a documentação dos endpoints é obrigatória:
+- Verifique se já existe um arquivo OpenAPI (`openapi.yaml`, `openapi.json`, `swagger.yaml` ou similar)
+- Se existir: atualize-o para refletir o estado atual dos endpoints
+- Se não existir: crie `openapi.yaml` na raiz (ou em `docs/`) seguindo a especificação OpenAPI 3.x
+- O arquivo OpenAPI deve cobrir: path, método HTTP, parâmetros, request body (com schema), responses (com schema e códigos de status), e autenticação se houver
+- Endpoints sem documentação OpenAPI são considerados incompletos
 
 ### Passo 5 — Confirmar
 Informe o que foi criado/modificado e onde encontrar.

@@ -66,6 +66,7 @@ Posso prosseguir?
 ### Passo 5 — Executar
 - Implemente seguindo exatamente o plano aprovado
 - Não adicione features extras além do escopo
+- **Se a tarefa criar ou modificar endpoints HTTP:** a documentação OpenAPI é obrigatória — atualize `openapi.yaml` (ou crie se não existir) junto com o código. Endpoint sem doc OpenAPI = tarefa incompleta
 - Ao terminar, informe o que foi feito em 2-3 linhas
 
 ## Notas

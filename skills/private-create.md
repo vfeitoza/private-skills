@@ -35,6 +35,7 @@ Faça as perguntas abaixo em sequência, uma de cada vez, esperando a resposta a
 5. Vai usar algum framework? (ex: Next.js, FastAPI, Gin, Rails — ou nenhum)
 6. Banco de dados? (PostgreSQL, SQLite, MongoDB, nenhum, ainda não sei)
 7. Vai ter interface visual? (web, mobile, CLI, API apenas, outro)
+8. O projeto vai expor endpoints HTTP? Se sim, já tem preferência de como documentar? (vou usar OpenAPI por padrão)
 
 **Bloco 3 — Estrutura e padrões**
 8. Como quer organizar o código? (monolito, módulos separados, microserviços, ainda não sei)
@@ -136,6 +137,15 @@ Com todas as informações coletadas, gere o arquivo `CLAUDE.md` na raiz do proj
 - [convenção de código acordada]
 - [padrão de nomenclatura]
 - [outras convenções relevantes]
+- Documentação de endpoints HTTP é obrigatória via OpenAPI (se o projeto expõe endpoints)
+
+## Documentação de API
+
+> Inclua esta seção apenas se o projeto expõe endpoints HTTP.
+
+- **Especificação OpenAPI:** `openapi.yaml` (OpenAPI 3.x)
+- Todo endpoint deve estar documentado: path, método, parâmetros, request body, responses e autenticação
+- Manter o arquivo atualizado a cada novo endpoint ou mudança de contrato é obrigatório
 
 ## Decisões de arquitetura
 
