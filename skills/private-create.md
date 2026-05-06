@@ -1,3 +1,8 @@
+---
+name: private-create
+description: Cria ou atualiza o `CLAUDE.md` do projeto. Detecta automaticamente se o projeto está vazio, sem CLAUDE.md ou com CLAUDE.md existente — e segue o fluxo correto: levantamento de requisitos via perguntas, inferência a partir do código, ou atualização cirúrgica. Use quando o usuário invocar `/private-create` ou pedir para criar/atualizar/regenerar o CLAUDE.md.
+---
+
 # private-create
 
 Comando para criar ou atualizar o CLAUDE.md do projeto. Analisa o código existente ou levanta requisitos do zero via perguntas.
@@ -38,19 +43,19 @@ Faça as perguntas abaixo em sequência, uma de cada vez, esperando a resposta a
 8. O projeto vai expor endpoints HTTP? Se sim, já tem preferência de como documentar? (vou usar OpenAPI por padrão)
 
 **Bloco 3 — Estrutura e padrões**
-8. Como quer organizar o código? (monolito, módulos separados, microserviços, ainda não sei)
-9. Tem preferência de estrutura de pastas? (ou posso sugerir uma padrão para a stack)
-10. Vai ter testes? Qual abordagem? (unitários, integração, e2e, TDD, ou depois vejo)
+9. Como quer organizar o código? (monolito, módulos separados, microserviços, ainda não sei)
+10. Tem preferência de estrutura de pastas? (ou posso sugerir uma padrão para a stack)
+11. Vai ter testes? Qual abordagem? (unitários, integração, e2e, TDD, ou depois vejo)
 
 **Bloco 4 — Contexto de desenvolvimento**
-11. É um projeto solo ou vai ter colaboradores?
-12. Tem algum prazo ou milestone importante?
-13. Tem alguma restrição técnica que eu deva saber? (ex: não pode usar X, precisa rodar offline, etc.)
-14. Tem alguma convenção de código que quer seguir? (ex: Airbnb style, PEP8, ou padrão da linguagem)
+12. É um projeto solo ou vai ter colaboradores?
+13. Tem algum prazo ou milestone importante?
+14. Tem alguma restrição técnica que eu deva saber? (ex: não pode usar X, precisa rodar offline, etc.)
+15. Tem alguma convenção de código que quer seguir? (ex: Airbnb style, PEP8, ou padrão da linguagem)
 
 **Bloco 5 — Funcionalidades iniciais**
-15. Quais são as 3-5 funcionalidades principais que o projeto precisa ter?
-16. O que está fora do escopo desta versão inicial?
+16. Quais são as 3-5 funcionalidades principais que o projeto precisa ter?
+17. O que está fora do escopo desta versão inicial?
 
 Após coletar todas as respostas, vá para o Passo 3.
 

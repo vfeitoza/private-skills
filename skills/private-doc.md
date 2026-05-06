@@ -1,3 +1,8 @@
+---
+name: private-doc
+description: Cria ou atualiza documentação (README, ADR, guia de contribuição, comentários, OpenAPI). Apresenta mini-plano para documentação estrutural; vai direto para atualizações pontuais. Quando o projeto expõe endpoints HTTP, exige cobertura via OpenAPI 3.x. Use quando o usuário invocar `/private-doc` ou pedir para documentar algo.
+---
+
 # private-doc
 
 Comando para criar ou atualizar documentação. Apresenta mini-plano para documentação estrutural, vai direto para atualizações pontuais.

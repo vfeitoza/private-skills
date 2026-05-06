@@ -1,3 +1,8 @@
+---
+name: private-task
+description: Inicia uma nova implementação (feature, mudança de comportamento, refatoração ou integração). Apresenta mini-plano com escopo, arquivos afetados e ordem de execução para tarefas não-triviais antes de escrever código. Use quando o usuário invocar `/private-task` ou pedir para implementar/adicionar/mudar algo.
+---
+
 # private-task
 
 Comando para iniciar uma nova implementação. Clarifica escopo, apresenta mini-plano e pede aprovação antes de executar.

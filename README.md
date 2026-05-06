@@ -24,7 +24,7 @@ Um conjunto de skills leve para o Claude Code, pensado para uso pessoal em proje
 Instala os skills em `~/.claude/skills/`, disponibilizando os comandos em qualquer projeto.
 
 ```bash
-git clone https://github.com/seu-usuario/private-skills.git
+git clone https://github.com/vfeitoza/private-skills.git
 cd private-skills
 ./install.sh
 ```
@@ -39,7 +39,7 @@ Instala os skills em `.claude/skills/` dentro do projeto atual. Os comandos fica
 
 ```bash
 # A partir do diretório raiz do seu projeto:
-git clone https://github.com/seu-usuario/private-skills.git /tmp/private-skills
+git clone https://github.com/vfeitoza/private-skills.git /tmp/private-skills
 cd /tmp/private-skills
 ./install.sh --project
 ```
@@ -105,7 +105,26 @@ Cada skill é um arquivo `.md` que instrui o Claude Code sobre como se comportar
 
 **Mini-plano:** os comandos `/private-task`, `/private-fix` e `/private-doc` apresentam um plano inline na conversa antes de executar, para tarefas não-triviais. O plano fica na conversa — não cria arquivos em disco. Você aprova antes de qualquer mudança ser feita.
 
-**Estado de sessão:** o `/private-end` salva um arquivo `.session.md` na raiz do projeto com o resumo do que foi feito, pendências e decisões. O `/private-start` lê esse arquivo para retomar o contexto na próxima sessão. Recomenda-se commitar o `.session.md` junto com o código.
+**Estado de sessão (efêmero):** o `/private-end` salva um arquivo `.session.md` na raiz do projeto com o resumo do que foi feito, pendências e decisões. O `/private-start` lê esse arquivo para retomar o contexto na próxima sessão. Por padrão, o `.session.md` é **gitignorado** — gera ruído em PRs e pode conter notas pessoais. Versionar é opt-in.
+
+**Memória persistente (duradoura):** os skills também alimentam a memória persistente do Claude Code (`~/.claude/projects/<projeto>/memory/`) com fatos que sobrevivem entre sessões: o que o projeto faz, decisões arquiteturais, preferências do usuário e referências externas. Estado da última sessão **não** vai para lá — isso é o `.session.md`.
+
+---
+
+## Relação com skills nativos do Claude Code
+
+O Claude Code já oferece skills nativos como `/init` (gera `CLAUDE.md`), `/review` e `/security-review`. Os comandos `/private-*` **coexistem** com eles e cobrem casos parcialmente sobrepostos:
+
+| Caso | Use o nativo | Use o privado |
+|---|---|---|
+| Gerar `CLAUDE.md` rapidamente em projeto novo | `/init` | `/private-create` (em PT-BR, com fluxo de perguntas e estados A/B/C) |
+| Revisar PR/branch antes de mergear | `/review` | — |
+| Auditoria de segurança em mudanças pendentes | `/security-review` | — |
+| Revisão local pré-commit (segurança + corretude + qualidade + consistência) | — | `/private-review` |
+| Fluxo coeso de início/fim de sessão com `.session.md` e memória | — | `/private-start` + `/private-end` |
+| Mini-plano em PT-BR antes de implementar feature/fix | — | `/private-task` + `/private-fix` |
+
+Não há conflito: ambos os conjuntos ficam disponíveis simultaneamente.
 
 ---
 
@@ -123,6 +142,9 @@ private-skills/
 │   ├── private-review.md
 │   └── private-end.md
 ├── install.sh
+├── CLAUDE.md
+├── CHANGELOG.md
+├── LICENSE
 └── README.md
 ```
 
@@ -130,6 +152,25 @@ private-skills/
 
 ## Customização
 
-Os skills são arquivos Markdown simples. Para ajustar o comportamento de qualquer comando, edite o arquivo correspondente em `~/.claude/skills/` (instalação global) ou `.claude/skills/` (instalação por projeto).
+Os skills são arquivos Markdown simples com frontmatter YAML (`name`, `description`) seguido do corpo. Para ajustar o comportamento de qualquer comando, edite o arquivo correspondente em `~/.claude/skills/` (instalação global) ou `.claude/skills/` (instalação por projeto).
 
 Por exemplo, para mudar o formato do briefing do `/private-start`, edite `~/.claude/skills/private-start.md` diretamente.
+
+> **Atenção:** o frontmatter (`---name:...---`) é obrigatório. Sem ele, o Claude Code não registra o arquivo como skill invocável.
+
+---
+
+## Contribuindo
+
+Para alterações no próprio repositório:
+
+1. Edite o(s) skill(s) em `skills/`.
+2. Bump de versão em `install.sh` (constante `VERSION`).
+3. Adicione entrada em `CHANGELOG.md` seguindo Keep a Changelog.
+4. Rode `bash -n install.sh && ./install.sh --help` antes de commitar.
+
+---
+
+## Licença
+
+[MIT](LICENSE) — uso pessoal, comercial, modificação e redistribuição permitidos. Consulte o arquivo `LICENSE` para detalhes.

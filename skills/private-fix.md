@@ -1,3 +1,8 @@
+---
+name: private-fix
+description: Debugging estruturado para bugs, erros inesperados, comportamento incorreto ou falhas de teste. Diagnostica antes de modificar código — apresenta hipóteses e plano de investigação para bugs não-óbvios. Use quando o usuário invocar `/private-fix` ou relatar um bug/erro/comportamento incorreto.
+---
+
 # private-fix
 
 Comando para debugging estruturado. Diagnostica o problema antes de mexer no código.

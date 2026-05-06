@@ -1,3 +1,8 @@
+---
+name: private-review
+description: Revisão de código pré-commit em ordem de prioridade (segurança → corretude → qualidade → consistência). Análise estática que reporta sem modificar — usa `git diff` por padrão ou um escopo específico. Use quando o usuário invocar `/private-review` ou pedir uma revisão antes de commitar/abrir PR.
+---
+
 # private-review
 
 Comando para revisão de código antes de commitar. Analisa qualidade, segurança e consistência sem modificar nada.

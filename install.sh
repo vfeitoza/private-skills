@@ -7,10 +7,13 @@ set -euo pipefail
 # Instala os skills do private-flow no Claude Code.
 #
 # Modos:
-#   ./install.sh           — instala globalmente (~/.claude/skills/)
-#   ./install.sh --project — instala no projeto atual (.claude/skills/)
-#   ./install.sh --help    — exibe ajuda
+#   ./install.sh              — instala globalmente (~/.claude/skills/)
+#   ./install.sh --project    — instala no projeto atual (.claude/skills/)
+#   ./install.sh --uninstall  — remove a instalação global
+#   ./install.sh --help       — exibe ajuda
 # =============================================================================
+
+VERSION="0.2.0"
 
 SKILLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/skills" && pwd)"
 GLOBAL_TARGET="$HOME/.claude/skills"
@@ -36,6 +39,8 @@ SKILLS=(
 
 usage() {
   echo ""
+  echo "  private-skills installer v${VERSION}"
+  echo ""
   echo "  Uso: ./install.sh [opção]"
   echo ""
   echo "  Opções:"
@@ -48,6 +53,7 @@ usage() {
   echo "    --uninstall           Remove da instalação global"
   echo "    --uninstall --project Remove da instalação do projeto atual"
   echo ""
+  echo "    --version     Exibe a versão e sai"
   echo "    --help        Exibe esta mensagem"
   echo ""
 }
@@ -87,7 +93,7 @@ install_skills() {
       # Verifica se é idêntico
       if cmp -s "$src" "$dst"; then
         echo -e "  ${YELLOW}= Sem mudanças: $skill${NC}"
-        ((skipped++)) || true
+        skipped=$((skipped + 1))
         continue
       fi
       echo -e "  ${BLUE}↻ Atualizado:   $skill${NC}"
@@ -96,7 +102,7 @@ install_skills() {
     fi
 
     cp "$src" "$dst"
-    ((installed++)) || true
+    installed=$((installed + 1))
   done
 
   echo ""
@@ -141,7 +147,7 @@ uninstall_skills() {
     if [ -f "$dst" ]; then
       rm "$dst"
       echo -e "  ${RED}- Removido: $skill${NC}"
-      ((removed++)) || true
+      removed=$((removed + 1))
     fi
   done
 
@@ -165,6 +171,10 @@ for arg in "$@"; do
   case "$arg" in
     --help|-h)
       usage
+      exit 0
+      ;;
+    --version|-v)
+      echo "private-skills v${VERSION}"
       exit 0
       ;;
     --project)

@@ -1,3 +1,8 @@
+---
+name: private-start
+description: Início de sessão de trabalho — lê o estado do projeto (git, stack, .session.md, memória persistente) e apresenta um briefing curto. Use quando o usuário invocar `/private-start` ou ao retomar trabalho em um projeto sem contexto carregado.
+---
+
 # private-start
 
 Comando de início de sessão. Lê o estado atual do projeto e resume o contexto para trabalho.

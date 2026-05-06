@@ -1,3 +1,8 @@
+---
+name: private-test
+description: Roda a suíte de testes do projeto, detectando o framework automaticamente (jest/vitest/pytest/go test/cargo test/rspec etc.), e identifica gaps de cobertura nos arquivos modificados. Use quando o usuário invocar `/private-test` ou pedir para rodar/verificar testes.
+---
+
 # private-test
 
 Comando para verificar cobertura de testes e rodar a suíte existente.
