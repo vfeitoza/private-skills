@@ -4,6 +4,18 @@ Todas as mudanças relevantes em `private-skills` são documentadas neste arquiv
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adota [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [0.3.0] — 2026-05-07
+
+### Added
+- `install.sh --project <PATH>`: aceita o path do projeto como argumento, instalando em `<PATH>/.claude/skills/`. Suporta `~`, paths relativos e absolutos.
+- `install.sh --project` (sem path): em terminal interativo, pergunta se deseja usar o diretório atual ou informar outro path.
+- Validação do diretório de destino: se não existir em modo `install`, pergunta antes de criar; em modo `uninstall`, falha de forma explícita.
+- Detecção de modo não-interativo: `--project` sem path em pipe/redirecionamento agora retorna erro claro em vez de travar.
+
+### Changed
+- Mensagens de `--help` e exemplos atualizados para refletir os novos modos.
+- `SCOPE_LABEL` em modo projeto agora exibe o path absoluto do diretório, não mais o genérico "(projeto atual)".
+
 ## [0.2.0] — 2026-05-06
 
 ### Added

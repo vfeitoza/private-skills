@@ -33,23 +33,36 @@ Reinicie o Claude Code após instalar.
 
 ---
 
-### Opção 2 — Projeto único
+### Opção 2 — Projeto específico
 
-Instala os skills em `.claude/skills/` dentro do projeto atual. Os comandos ficam disponíveis apenas neste projeto.
+Instala os skills em `<PROJETO>/.claude/skills/`. Os comandos ficam disponíveis apenas dentro desse projeto.
 
-```bash
-# A partir do diretório raiz do seu projeto:
-git clone https://github.com/vfeitoza/private-skills.git /tmp/private-skills
-cd /tmp/private-skills
-./install.sh --project
-```
-
-Ou, se já tiver o repositório clonado:
+**Modo interativo** (pergunta se você quer o diretório atual ou outro):
 
 ```bash
 cd /caminho/para/private-skills
 ./install.sh --project
 ```
+
+Você verá:
+
+```
+Onde instalar os skills?
+  1) Diretório atual: /caminho/atual
+  2) Informar outro path
+
+Escolha [1/2] (padrão: 1):
+```
+
+**Modo direto** (informa o path como argumento, sem prompt):
+
+```bash
+./install.sh --project ~/Projetos/meu-app
+./install.sh --project /opt/codigo/api
+./install.sh --project .                    # diretório atual
+```
+
+Aceita `~`, paths relativos e absolutos. Se o diretório não existir, o script pergunta antes de criar.
 
 Reinicie o Claude Code após instalar.
 
@@ -65,10 +78,10 @@ mkdir -p ~/.claude/skills
 cp skills/*.md ~/.claude/skills/
 ```
 
-**Projeto único:**
+**Projeto específico:**
 ```bash
-mkdir -p .claude/skills
-cp /caminho/para/private-skills/skills/*.md .claude/skills/
+mkdir -p /caminho/do/projeto/.claude/skills
+cp /caminho/para/private-skills/skills/*.md /caminho/do/projeto/.claude/skills/
 ```
 
 Reinicie o Claude Code após copiar.
@@ -82,8 +95,8 @@ Para atualizar para a versão mais recente:
 ```bash
 cd /caminho/para/private-skills
 git pull
-./install.sh           # global
-./install.sh --project # projeto específico
+./install.sh                          # global
+./install.sh --project ~/meu-projeto  # projeto específico
 ```
 
 O script detecta automaticamente o que mudou e atualiza apenas os arquivos necessários.
@@ -93,8 +106,9 @@ O script detecta automaticamente o que mudou e atualiza apenas os arquivos neces
 ## Desinstalação
 
 ```bash
-./install.sh --uninstall           # remove da instalação global
-./install.sh --uninstall --project # remove do projeto atual
+./install.sh --uninstall                          # remove da instalação global
+./install.sh --uninstall --project ~/meu-projeto  # remove de um projeto
+./install.sh --uninstall --project                # interativo (pergunta o path)
 ```
 
 ---

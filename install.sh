@@ -7,17 +7,18 @@ set -euo pipefail
 # Instala os skills do private-flow no Claude Code.
 #
 # Modos:
-#   ./install.sh              — instala globalmente (~/.claude/skills/)
-#   ./install.sh --project    — instala no projeto atual (.claude/skills/)
-#   ./install.sh --uninstall  — remove a instalação global
-#   ./install.sh --help       — exibe ajuda
+#   ./install.sh                       — instala globalmente (~/.claude/skills/)
+#   ./install.sh --project             — instala em um projeto (pergunta o path)
+#   ./install.sh --project <PATH>      — instala em <PATH>/.claude/skills/
+#   ./install.sh --uninstall           — remove a instalação global
+#   ./install.sh --uninstall --project [<PATH>] — remove de um projeto
+#   ./install.sh --help                — exibe ajuda
 # =============================================================================
 
-VERSION="0.2.0"
+VERSION="0.3.0"
 
 SKILLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/skills" && pwd)"
 GLOBAL_TARGET="$HOME/.claude/skills"
-PROJECT_TARGET=".claude/skills"
 
 # Cores
 RED='\033[0;31m'
@@ -41,21 +42,112 @@ usage() {
   echo ""
   echo "  private-skills installer v${VERSION}"
   echo ""
-  echo "  Uso: ./install.sh [opção]"
+  echo "  Uso: ./install.sh [opção] [path]"
   echo ""
   echo "  Opções:"
-  echo "    (sem opção)   Instala globalmente em ~/.claude/skills/"
-  echo "                  Disponível em todos os projetos"
+  echo "    (sem opção)        Instala globalmente em ~/.claude/skills/"
+  echo "                       Disponível em todos os projetos"
   echo ""
-  echo "    --project     Instala no projeto atual em .claude/skills/"
-  echo "                  Disponível apenas neste projeto"
+  echo "    --project          Instala em um projeto (.claude/skills/)"
+  echo "                       Sem path, pergunta interativamente:"
+  echo "                         1) usar o diretório atual"
+  echo "                         2) informar outro path"
   echo ""
-  echo "    --uninstall           Remove da instalação global"
-  echo "    --uninstall --project Remove da instalação do projeto atual"
+  echo "    --project <PATH>   Instala em <PATH>/.claude/skills/ (não-interativo)"
+  echo "                       Aceita ~ e paths relativos. Se o diretório não"
+  echo "                       existir, pergunta antes de criar."
   echo ""
-  echo "    --version     Exibe a versão e sai"
-  echo "    --help        Exibe esta mensagem"
+  echo "    --uninstall                 Remove da instalação global"
+  echo "    --uninstall --project [<PATH>]  Remove da instalação de um projeto"
   echo ""
+  echo "    --version          Exibe a versão e sai"
+  echo "    --help             Exibe esta mensagem"
+  echo ""
+  echo "  Exemplos:"
+  echo "    ./install.sh                              # global"
+  echo "    ./install.sh --project                    # interativo"
+  echo "    ./install.sh --project ~/Projetos/api     # direto"
+  echo "    ./install.sh --project .                  # diretório atual"
+  echo ""
+}
+
+# Expande ~ e resolve para path absoluto
+expand_path() {
+  local p="$1"
+  # Expande ~ no início
+  p="${p/#\~/$HOME}"
+  # Resolve absoluto se possível (sem realpath para portabilidade)
+  if [ -d "$p" ]; then
+    (cd "$p" && pwd)
+  else
+    # Diretório ainda não existe — devolve normalizado
+    case "$p" in
+      /*) echo "$p" ;;
+      *)  echo "$PWD/$p" ;;
+    esac
+  fi
+}
+
+# Pergunta o path do projeto interativamente (modo --project sem argumento)
+prompt_project_path() {
+  if [ ! -t 0 ] || [ ! -t 1 ]; then
+    echo -e "${RED}Erro: --project sem path requer terminal interativo.${NC}" >&2
+    echo "Use: ./install.sh --project <PATH>" >&2
+    exit 1
+  fi
+
+  echo "" >&2
+  echo "Onde instalar os skills?" >&2
+  echo "  1) Diretório atual: $PWD" >&2
+  echo "  2) Informar outro path" >&2
+  echo "" >&2
+
+  local choice raw
+  read -rp "Escolha [1/2] (padrão: 1): " choice
+  choice="${choice:-1}"
+
+  case "$choice" in
+    1)
+      echo "$PWD"
+      ;;
+    2)
+      read -rp "Informe o path do projeto: " raw
+      if [ -z "$raw" ]; then
+        echo -e "${RED}Erro: path vazio.${NC}" >&2
+        exit 1
+      fi
+      expand_path "$raw"
+      ;;
+    *)
+      echo -e "${RED}Opção inválida: $choice${NC}" >&2
+      exit 1
+      ;;
+  esac
+}
+
+# Garante que o diretório do projeto existe (cria se o usuário aprovar)
+ensure_project_dir() {
+  local dir="$1"
+  if [ -d "$dir" ]; then
+    return 0
+  fi
+
+  if [ ! -t 0 ] || [ ! -t 1 ]; then
+    echo -e "${RED}Erro: diretório '$dir' não existe (modo não-interativo).${NC}" >&2
+    exit 1
+  fi
+
+  echo -e "${YELLOW}Diretório '$dir' não existe.${NC}" >&2
+  read -rp "Criar? [s/N]: " yn
+  case "$yn" in
+    s|S|y|Y|sim|SIM|yes|YES)
+      mkdir -p "$dir"
+      ;;
+    *)
+      echo "Abortado." >&2
+      exit 1
+      ;;
+  esac
 }
 
 check_skills_dir() {
@@ -166,9 +258,10 @@ uninstall_skills() {
 
 MODE="install"
 SCOPE="global"
+PROJECT_PATH=""
 
-for arg in "$@"; do
-  case "$arg" in
+while [ $# -gt 0 ]; do
+  case "$1" in
     --help|-h)
       usage
       exit 0
@@ -179,16 +272,22 @@ for arg in "$@"; do
       ;;
     --project)
       SCOPE="project"
+      # Se o próximo arg existe e não começa com '--', trata como path
+      if [ $# -ge 2 ] && [ "${2#--}" = "$2" ]; then
+        PROJECT_PATH="$2"
+        shift
+      fi
       ;;
     --uninstall)
       MODE="uninstall"
       ;;
     *)
-      echo -e "${RED}Opção desconhecida: $arg${NC}"
+      echo -e "${RED}Opção desconhecida: $1${NC}"
       usage
       exit 1
       ;;
   esac
+  shift
 done
 
 check_skills_dir
@@ -197,8 +296,24 @@ if [ "$SCOPE" = "global" ]; then
   TARGET="$GLOBAL_TARGET"
   SCOPE_LABEL="(global — todos os projetos)"
 else
-  TARGET="$PROJECT_TARGET"
-  SCOPE_LABEL="(projeto atual)"
+  # Resolve o path do projeto
+  if [ -z "$PROJECT_PATH" ]; then
+    PROJECT_PATH="$(prompt_project_path)"
+  else
+    PROJECT_PATH="$(expand_path "$PROJECT_PATH")"
+  fi
+
+  # Para instalação, garante que o diretório base existe;
+  # para desinstalação, exige que já exista
+  if [ "$MODE" = "install" ]; then
+    ensure_project_dir "$PROJECT_PATH"
+  elif [ ! -d "$PROJECT_PATH" ]; then
+    echo -e "${RED}Erro: diretório '$PROJECT_PATH' não existe.${NC}" >&2
+    exit 1
+  fi
+
+  TARGET="$PROJECT_PATH/.claude/skills"
+  SCOPE_LABEL="(projeto: $PROJECT_PATH)"
 fi
 
 if [ "$MODE" = "install" ]; then
