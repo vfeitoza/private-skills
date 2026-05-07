@@ -15,6 +15,10 @@ cd ~/private-skills
 
 # OU em um projeto específico
 ./install.sh --project ~/Projetos/meu-app
+
+# OU em ambos os harnesses (Claude Code + OpenCode) de uma vez
+./install.sh --all
+./install.sh --all --project ~/Projetos/meu-app
 ```
 
 ### 2. Reiniciar o Claude Code

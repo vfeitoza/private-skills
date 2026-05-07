@@ -4,6 +4,15 @@ Todas as mudanças relevantes em `private-skills` são documentadas neste arquiv
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adota [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [0.5.0] — 2026-05-07
+
+### Added
+- **Flag `--all`**: instala/desinstala simultaneamente em Claude Code e OpenCode. Combina com `--project [<PATH>]` para instalar em ambos os destinos no mesmo projeto.
+
+### Changed
+- `install.sh` refatorado: novo `run_for_harness()` resolve target/label por harness, permitindo loop quando `--all` é passado. Resolução do path do projeto centralizada (uma única pergunta interativa, mesmo com `--all`).
+- Mensagem final do instalador agora é neutra ("após reiniciar o agente") em vez de mencionar Claude Code especificamente.
+
 ## [0.4.0] — 2026-05-07
 
 ### Added

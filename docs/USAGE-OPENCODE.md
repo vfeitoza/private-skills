@@ -15,6 +15,10 @@ cd ~/private-skills
 
 # OU em um projeto específico
 ./install.sh --opencode --project ~/Projetos/meu-app
+
+# OU em ambos os harnesses (Claude Code + OpenCode) de uma vez
+./install.sh --all
+./install.sh --all --project ~/Projetos/meu-app
 ```
 
 Os arquivos vão para `~/.config/opencode/command/` (global) ou `<PROJ>/.opencode/command/` (projeto).

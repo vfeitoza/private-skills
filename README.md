@@ -8,6 +8,7 @@ Um conjunto de skills leve para agentes de coding (Claude Code, OpenCode, Cursor
 |---|---|---|
 | Claude Code | `~/.claude/skills/` | `<PROJ>/.claude/skills/` |
 | OpenCode (sst/opencode) | `~/.config/opencode/command/` | `<PROJ>/.opencode/command/` |
+| **Ambos (`--all`)** | ambos os caminhos acima | ambos os caminhos acima |
 
 📖 **Guias detalhados de uso:**
 - [`docs/USAGE-CLAUDE.md`](docs/USAGE-CLAUDE.md) — exemplos completos no Claude Code
@@ -40,6 +41,7 @@ cd private-skills
 
 ./install.sh              # Claude Code → ~/.claude/skills/
 ./install.sh --opencode   # OpenCode    → ~/.config/opencode/command/
+./install.sh --all        # ambos os destinos acima, em uma chamada
 ```
 
 Reinicie o agente após instalar.
@@ -76,6 +78,7 @@ Escolha [1/2] (padrão: 1):
 ./install.sh --project .                          # diretório atual
 
 ./install.sh --opencode --project ~/Projetos/api  # OpenCode
+./install.sh --all --project ~/Projetos/api       # ambos os harnesses no projeto
 ```
 
 Aceita `~`, paths relativos e absolutos. Se o diretório não existir, o script pergunta antes de criar.
@@ -113,8 +116,10 @@ cd /caminho/para/private-skills
 git pull
 ./install.sh                                       # Claude Code, global
 ./install.sh --opencode                            # OpenCode, global
+./install.sh --all                                 # ambos, global
 ./install.sh --project ~/meu-projeto               # Claude Code, projeto
 ./install.sh --opencode --project ~/meu-projeto    # OpenCode, projeto
+./install.sh --all --project ~/meu-projeto         # ambos, projeto
 ```
 
 O script detecta automaticamente o que mudou e atualiza apenas os arquivos necessários.
@@ -126,8 +131,10 @@ O script detecta automaticamente o que mudou e atualiza apenas os arquivos neces
 ```bash
 ./install.sh --uninstall                                       # Claude global
 ./install.sh --uninstall --opencode                            # OpenCode global
+./install.sh --uninstall --all                                 # ambos global
 ./install.sh --uninstall --project ~/meu-projeto               # Claude, projeto
 ./install.sh --uninstall --opencode --project ~/meu-projeto    # OpenCode, projeto
+./install.sh --uninstall --all --project ~/meu-projeto         # ambos, projeto
 ./install.sh --uninstall --project                             # interativo
 ```
 

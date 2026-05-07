@@ -4,18 +4,20 @@ set -euo pipefail
 # =============================================================================
 # private-skills — instalador
 # =============================================================================
-# Instala os skills do private-flow em Claude Code ou OpenCode.
+# Instala os skills do private-flow em Claude Code, OpenCode, ou ambos.
 #
 # Modos:
 #   ./install.sh                              — Claude Code, global
-#   ./install.sh --project [<PATH>]           — Claude Code, projeto
 #   ./install.sh --opencode                   — OpenCode, global
+#   ./install.sh --all                        — Claude Code + OpenCode, global
+#   ./install.sh --project [<PATH>]           — Claude Code, projeto
 #   ./install.sh --opencode --project [<PATH>] — OpenCode, projeto
+#   ./install.sh --all --project [<PATH>]     — ambos, projeto
 #   ./install.sh --uninstall [...]            — desinstala (mesmas flags)
 #   ./install.sh --help                       — exibe ajuda
 # =============================================================================
 
-VERSION="0.4.0"
+VERSION="0.5.0"
 
 SKILLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/skills" && pwd)"
 
@@ -48,11 +50,12 @@ usage() {
   echo ""
   echo "  private-skills installer v${VERSION}"
   echo ""
-  echo "  Uso: ./install.sh [--opencode] [--project [<PATH>]] [--uninstall]"
+  echo "  Uso: ./install.sh [--opencode|--all] [--project [<PATH>]] [--uninstall]"
   echo ""
   echo "  Harness (escolha um; padrão: Claude Code):"
   echo "    (sem flag)    Claude Code"
   echo "    --opencode    OpenCode (sst/opencode)"
+  echo "    --all         Claude Code + OpenCode (instala/desinstala em ambos)"
   echo ""
   echo "  Escopo:"
   echo "    (sem flag)         Global"
@@ -66,7 +69,7 @@ usage() {
   echo ""
   echo "  Modo:"
   echo "    (sem flag)    Instala / atualiza"
-  echo "    --uninstall   Remove os skills do destino selecionado"
+  echo "    --uninstall   Remove os skills do(s) destino(s) selecionado(s)"
   echo ""
   echo "  Outros:"
   echo "    --version     Exibe a versão e sai"
@@ -75,9 +78,11 @@ usage() {
   echo "  Exemplos:"
   echo "    ./install.sh                                  # Claude Code, global"
   echo "    ./install.sh --opencode                       # OpenCode, global"
+  echo "    ./install.sh --all                            # ambos, global"
+  echo "    ./install.sh --all --project ~/Projetos/api   # ambos, no projeto"
   echo "    ./install.sh --project ~/Projetos/api         # Claude Code, projeto direto"
   echo "    ./install.sh --opencode --project .           # OpenCode, dir atual"
-  echo "    ./install.sh --uninstall --opencode --project ~/api"
+  echo "    ./install.sh --uninstall --all                # remove em ambos"
   echo ""
 }
 
@@ -215,9 +220,9 @@ install_skills() {
   fi
 
   echo ""
-  echo "  Comandos disponíveis após reiniciar o Claude Code:"
+  echo "  Comandos disponíveis após reiniciar o agente:"
   echo "    /private-start   — iniciar sessão"
-  echo "    /private-create  — criar ou atualizar CLAUDE.md"
+  echo "    /private-create  — criar ou atualizar AGENTS.md"
   echo "    /private-task    — nova implementação"
   echo "    /private-fix     — debugging"
   echo "    /private-test    — rodar testes"
@@ -287,6 +292,9 @@ while [ $# -gt 0 ]; do
     --claude)
       HARNESS="claude"
       ;;
+    --all)
+      HARNESS="all"
+      ;;
     --project)
       SCOPE="project"
       # Se o próximo arg existe e não começa com '--', trata como path
@@ -309,16 +317,8 @@ done
 
 check_skills_dir
 
-# Resolve o destino conforme harness + escopo
-case "$HARNESS" in
-  claude)   HARNESS_LABEL="Claude Code"; GLOBAL_TARGET="$CLAUDE_GLOBAL_TARGET"; PROJECT_SUBDIR="$CLAUDE_PROJECT_SUBDIR" ;;
-  opencode) HARNESS_LABEL="OpenCode";    GLOBAL_TARGET="$OPENCODE_GLOBAL_TARGET"; PROJECT_SUBDIR="$OPENCODE_PROJECT_SUBDIR" ;;
-esac
-
-if [ "$SCOPE" = "global" ]; then
-  TARGET="$GLOBAL_TARGET"
-  SCOPE_LABEL="(${HARNESS_LABEL}, global — todos os projetos)"
-else
+# Resolve o path do projeto uma vez (compartilhado entre harnesses no modo --all)
+if [ "$SCOPE" = "project" ]; then
   if [ -z "$PROJECT_PATH" ]; then
     PROJECT_PATH="$(prompt_project_path)"
   else
@@ -331,13 +331,48 @@ else
     echo -e "${RED}Erro: diretório '$PROJECT_PATH' não existe.${NC}" >&2
     exit 1
   fi
-
-  TARGET="$PROJECT_PATH/$PROJECT_SUBDIR"
-  SCOPE_LABEL="(${HARNESS_LABEL}, projeto: $PROJECT_PATH)"
 fi
 
-if [ "$MODE" = "install" ]; then
-  install_skills "$TARGET" "$SCOPE_LABEL"
-else
-  uninstall_skills "$TARGET" "$SCOPE_LABEL"
-fi
+# Resolve target/label para um harness e executa install ou uninstall
+run_for_harness() {
+  local harness="$1"
+  local label global_target subdir target scope_label
+
+  case "$harness" in
+    claude)
+      label="Claude Code"
+      global_target="$CLAUDE_GLOBAL_TARGET"
+      subdir="$CLAUDE_PROJECT_SUBDIR"
+      ;;
+    opencode)
+      label="OpenCode"
+      global_target="$OPENCODE_GLOBAL_TARGET"
+      subdir="$OPENCODE_PROJECT_SUBDIR"
+      ;;
+  esac
+
+  if [ "$SCOPE" = "global" ]; then
+    target="$global_target"
+    scope_label="(${label}, global — todos os projetos)"
+  else
+    target="$PROJECT_PATH/$subdir"
+    scope_label="(${label}, projeto: $PROJECT_PATH)"
+  fi
+
+  if [ "$MODE" = "install" ]; then
+    install_skills "$target" "$scope_label"
+  else
+    uninstall_skills "$target" "$scope_label"
+  fi
+}
+
+# Executa para o(s) harness(es) selecionado(s)
+case "$HARNESS" in
+  all)
+    run_for_harness claude
+    run_for_harness opencode
+    ;;
+  *)
+    run_for_harness "$HARNESS"
+    ;;
+esac
