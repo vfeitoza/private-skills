@@ -1,16 +1,17 @@
 ---
 name: private-create
-description: Cria ou atualiza o `CLAUDE.md` do projeto. Detecta automaticamente se o projeto está vazio, sem CLAUDE.md ou com CLAUDE.md existente — e segue o fluxo correto: levantamento de requisitos via perguntas, inferência a partir do código, ou atualização cirúrgica. Use quando o usuário invocar `/private-create` ou pedir para criar/atualizar/regenerar o CLAUDE.md.
+description: Cria ou atualiza o `AGENTS.md` do projeto (com symlink `CLAUDE.md → AGENTS.md` para retrocompatibilidade). Detecta automaticamente se o projeto está vazio, sem `AGENTS.md`/`CLAUDE.md` ou com algum deles existente, e segue o fluxo correto: levantamento de requisitos via perguntas, inferência a partir do código, ou atualização cirúrgica. Use quando o usuário invocar `/private-create` ou pedir para criar/atualizar/regenerar o `AGENTS.md` ou `CLAUDE.md`.
 ---
 
 # private-create
 
-Comando para criar ou atualizar o CLAUDE.md do projeto. Analisa o código existente ou levanta requisitos do zero via perguntas.
+Comando para criar ou atualizar o `AGENTS.md` do projeto. Analisa o código existente ou levanta requisitos do zero via perguntas. Por padrão também cria o symlink `CLAUDE.md → AGENTS.md` para retrocompatibilidade com Claude Code.
 
 ## Quando usar
-- Ao iniciar um projeto novo (projeto vazio ou sem CLAUDE.md)
-- Ao incorporar um projeto existente que ainda não tem CLAUDE.md
-- Ao atualizar um CLAUDE.md desatualizado após mudanças significativas
+- Ao iniciar um projeto novo (projeto vazio ou sem `AGENTS.md`/`CLAUDE.md`)
+- Ao incorporar um projeto existente que ainda não tem nenhum dos dois
+- Ao atualizar um `AGENTS.md`/`CLAUDE.md` desatualizado após mudanças significativas
+- Ao migrar um projeto legado que tem só `CLAUDE.md` para o padrão `AGENTS.md` cross-tool
 
 ## O que fazer
 
@@ -18,11 +19,12 @@ Comando para criar ou atualizar o CLAUDE.md do projeto. Analisa o código existe
 
 Rode `find . -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' | head -60` para entender o que existe.
 
-Classifique o projeto em um de três estados:
+Classifique o projeto em um de quatro estados:
 
 **A) Projeto vazio** — nenhum arquivo além de `.git` (ou sem git)
-**B) Projeto existente sem CLAUDE.md** — tem código mas não tem CLAUDE.md
-**C) Projeto existente com CLAUDE.md** — tem código e já tem CLAUDE.md
+**B) Projeto existente sem AGENTS.md nem CLAUDE.md** — tem código mas não tem spec
+**C) Projeto existente só com CLAUDE.md** (legado) — promover para `AGENTS.md` + symlink
+**D) Projeto existente com AGENTS.md** — tem código e já tem a spec canônica
 
 ---
 
@@ -79,11 +81,32 @@ Após coletar as informações, vá para o Passo 3.
 
 ---
 
-### Estado C — Projeto existente com CLAUDE.md
+### Estado C — Projeto legado só com `CLAUDE.md`
 
-Leia o CLAUDE.md atual e apresente:
+Leia o `CLAUDE.md` atual e apresente:
+
 ```
-CLAUDE.md encontrado. Última atualização: [data se disponível]
+CLAUDE.md encontrado (sem AGENTS.md). Recomendação: promover para o
+padrão cross-tool AGENTS.md, mantendo CLAUDE.md como symlink.
+
+O que deseja fazer?
+1. Migrar para AGENTS.md (renomeia + cria symlink CLAUDE.md → AGENTS.md)
+2. Apenas atualizar o CLAUDE.md existente, sem migrar
+3. Cancelar
+```
+
+Se **migrar**: `git mv CLAUDE.md AGENTS.md && ln -s AGENTS.md CLAUDE.md`. Depois, ofereça também atualizar o conteúdo (passos 3+) ou parar por aqui.
+
+Se **só atualizar**: siga o roteiro do Estado D abaixo, mas trabalhando direto no `CLAUDE.md`.
+
+---
+
+### Estado D — Projeto existente com `AGENTS.md`
+
+Leia o `AGENTS.md` atual e apresente:
+
+```
+AGENTS.md encontrado. Última atualização: [data se disponível]
 
 Seções atuais:
 - [lista das seções existentes]
@@ -96,19 +119,21 @@ O que deseja fazer?
 
 Aguarde a escolha e proceda conforme:
 - **Atualizar seções:** pergunte quais seções e o que mudou, depois edite cirurgicamente
-- **Regenerar:** leia o código atual, compare com o CLAUDE.md existente, gere uma versão nova preservando decisões manuais que não são deriváveis do código
+- **Regenerar:** leia o código atual, compare com o `AGENTS.md` existente, gere uma versão nova preservando decisões manuais que não são deriváveis do código
 - **Adicionar:** pergunte o que está faltando e incorpore
 
 ---
 
-### Passo 3 — Gerar o CLAUDE.md
+### Passo 3 — Gerar o `AGENTS.md`
 
-Com todas as informações coletadas, gere o arquivo `CLAUDE.md` na raiz do projeto com esta estrutura:
+Com todas as informações coletadas, gere o arquivo `AGENTS.md` na raiz do projeto com esta estrutura:
 
 ```markdown
 # [Nome do Projeto]
 
 [Descrição em uma frase — o que faz e para quem]
+
+> Este projeto adota `AGENTS.md` como spec única ([padrão agents.md](https://agents.md)). Lido por Claude Code, OpenCode, Cursor, Aider e outros agentes.
 
 ## Stack
 
@@ -163,23 +188,40 @@ Com todas as informações coletadas, gere o arquivo `CLAUDE.md` na raiz do proj
 
 ## Contexto importante
 
-[Qualquer informação que o Claude precisa saber para trabalhar bem neste projeto — restrições, integrações externas, comportamentos não-óbvios]
+[Qualquer informação que o agente precisa saber para trabalhar bem neste projeto — restrições, integrações externas, comportamentos não-óbvios]
 ```
 
 Adapte as seções conforme o projeto — remova seções que não se aplicam, adicione seções específicas se necessário.
 
 ### Passo 4 — Confirmar antes de escrever
 
-Apresente o CLAUDE.md gerado na conversa e pergunte:
-> "Posso salvar este CLAUDE.md no projeto?"
+Apresente o `AGENTS.md` gerado na conversa e pergunte:
+> "Posso salvar este `AGENTS.md` no projeto e criar o symlink `CLAUDE.md → AGENTS.md`?"
 
-Só escreva o arquivo após confirmação.
+Só escreva os arquivos após confirmação.
 
-### Passo 5 — Confirmar criação
+### Passo 5 — Criar symlink `CLAUDE.md → AGENTS.md`
+
+Após salvar `AGENTS.md`, crie o symlink:
+
+```bash
+ln -s AGENTS.md CLAUDE.md
+```
+
+Em sistemas onde symlink é desconfortável (Windows sem privilégio de developer mode, alguns CIs), ofereça a alternativa: criar `CLAUDE.md` como arquivo regular contendo apenas:
+
+```markdown
+> Este projeto adota [AGENTS.md](AGENTS.md) como spec única. Veja lá.
+```
+
+Pergunte ao usuário qual prefere se o ambiente parecer ambíguo (Windows detectável via `uname -s`); caso contrário, vá de symlink.
+
+### Passo 6 — Confirmar criação
 
 Após salvar:
 ```
-CLAUDE.md criado em [caminho].
+AGENTS.md criado em [caminho].
+CLAUDE.md criado como symlink → AGENTS.md (ou referência, conforme escolha).
 
 Próximos passos sugeridos:
 - /private-task — para começar a primeira implementação
@@ -187,7 +229,8 @@ Próximos passos sugeridos:
 ```
 
 ## Notas
-- Nunca sobrescreva um CLAUDE.md existente sem mostrar o novo conteúdo primeiro
+- Nunca sobrescreva um `AGENTS.md` ou `CLAUDE.md` existente sem mostrar o novo conteúdo primeiro
 - Para projetos existentes, prefira inferir do código a fazer perguntas desnecessárias
-- O CLAUDE.md é para o Claude, não para humanos — seja técnico e direto, sem floreios
-- Se o projeto tiver um README.md, o CLAUDE.md não precisa repetir o que já está lá — referencie
+- O `AGENTS.md` é para o agente, não para humanos — seja técnico e direto, sem floreios
+- Se o projeto tiver um `README.md`, o `AGENTS.md` não precisa repetir o que já está lá — referencie
+- `AGENTS.md` é o canônico; `CLAUDE.md` é apenas symlink (ou referência) para retrocompatibilidade com Claude Code antigo

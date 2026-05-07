@@ -1,47 +1,61 @@
 # private-skills
 
-Um conjunto de skills leve para o Claude Code, pensado para uso pessoal em projetos com stacks variadas. Sem subagentes, sem diretórios de planejamento, sem overhead — só o fluxo que você precisa.
+Um conjunto de skills leve para agentes de coding (Claude Code, OpenCode, Cursor, Aider e outros que sigam o padrão `AGENTS.md`), pensado para uso pessoal em projetos com stacks variadas. Sem subagentes, sem diretórios de planejamento, sem overhead — só o fluxo que você precisa.
+
+**Compatibilidade:** mesma fonte de skill, dois harnesses suportados. O instalador escolhe o destino:
+
+| Harness | Global | Por projeto |
+|---|---|---|
+| Claude Code | `~/.claude/skills/` | `<PROJ>/.claude/skills/` |
+| OpenCode (sst/opencode) | `~/.config/opencode/command/` | `<PROJ>/.opencode/command/` |
+
+📖 **Guias detalhados de uso:**
+- [`docs/USAGE-CLAUDE.md`](docs/USAGE-CLAUDE.md) — exemplos completos no Claude Code
+- [`docs/USAGE-OPENCODE.md`](docs/USAGE-OPENCODE.md) — exemplos completos no OpenCode
 
 ## Comandos disponíveis
 
 | Comando | Quando usar |
 |---|---|
-| `/private-start` | Início de sessão — resume contexto do projeto |
-| `/private-create` | Cria ou atualiza o CLAUDE.md — lê o código existente ou levanta requisitos do zero |
+| `/private-start` | Início de sessão — resume contexto do projeto (`.session.md` + `.agent-memory.md`) |
+| `/private-create` | Cria ou atualiza `AGENTS.md` (com symlink `CLAUDE.md → AGENTS.md`) — lê código existente ou levanta requisitos do zero |
 | `/private-task` | Nova feature ou mudança — com mini-plano para tarefas não-triviais |
 | `/private-fix` | Bug ou comportamento inesperado — diagnóstico antes de mexer no código |
 | `/private-test` | Após implementar — roda testes e identifica gaps de cobertura |
 | `/private-doc` | Documentar algo — com mini-plano para documentação estrutural |
 | `/private-review` | Antes de commitar — checa segurança, corretude e consistência |
-| `/private-end` | Fim de sessão — salva contexto em memória e no `.session.md` do projeto |
+| `/private-end` | Fim de sessão — salva estado em `.session.md` e fatos duradouros em `.agent-memory.md` |
 
 ---
 
 ## Instalação
 
-### Opção 1 — Global (todos os projetos)
+> Padrão: **Claude Code**. Para instalar no **OpenCode**, adicione `--opencode` em qualquer comando abaixo.
 
-Instala os skills em `~/.claude/skills/`, disponibilizando os comandos em qualquer projeto.
+### Opção 1 — Global (todos os projetos)
 
 ```bash
 git clone https://github.com/vfeitoza/private-skills.git
 cd private-skills
-./install.sh
+
+./install.sh              # Claude Code → ~/.claude/skills/
+./install.sh --opencode   # OpenCode    → ~/.config/opencode/command/
 ```
 
-Reinicie o Claude Code após instalar.
+Reinicie o agente após instalar.
 
 ---
 
 ### Opção 2 — Projeto específico
 
-Instala os skills em `<PROJETO>/.claude/skills/`. Os comandos ficam disponíveis apenas dentro desse projeto.
+Instala em `<PROJETO>/.claude/skills/` (Claude Code) ou `<PROJETO>/.opencode/command/` (OpenCode). Os comandos ficam disponíveis apenas dentro desse projeto.
 
 **Modo interativo** (pergunta se você quer o diretório atual ou outro):
 
 ```bash
 cd /caminho/para/private-skills
-./install.sh --project
+./install.sh --project              # Claude Code, interativo
+./install.sh --opencode --project   # OpenCode, interativo
 ```
 
 Você verá:
@@ -59,44 +73,48 @@ Escolha [1/2] (padrão: 1):
 ```bash
 ./install.sh --project ~/Projetos/meu-app
 ./install.sh --project /opt/codigo/api
-./install.sh --project .                    # diretório atual
+./install.sh --project .                          # diretório atual
+
+./install.sh --opencode --project ~/Projetos/api  # OpenCode
 ```
 
 Aceita `~`, paths relativos e absolutos. Se o diretório não existir, o script pergunta antes de criar.
 
-Reinicie o Claude Code após instalar.
+Reinicie o agente após instalar.
 
 ---
 
 ### Instalação manual
 
-Se preferir instalar sem o script, copie os arquivos da pasta `skills/` para o destino desejado:
+Se preferir instalar sem o script, copie os arquivos da pasta `skills/` para o destino correspondente ao harness:
 
-**Global:**
+**Claude Code (global):**
 ```bash
 mkdir -p ~/.claude/skills
 cp skills/*.md ~/.claude/skills/
 ```
 
-**Projeto específico:**
+**OpenCode (global):**
 ```bash
-mkdir -p /caminho/do/projeto/.claude/skills
-cp /caminho/para/private-skills/skills/*.md /caminho/do/projeto/.claude/skills/
+mkdir -p ~/.config/opencode/command
+cp skills/*.md ~/.config/opencode/command/
 ```
 
-Reinicie o Claude Code após copiar.
+**Por projeto:** troque o destino para `<PROJ>/.claude/skills/` ou `<PROJ>/.opencode/command/`.
+
+Reinicie o agente após copiar.
 
 ---
 
 ## Atualização
 
-Para atualizar para a versão mais recente:
-
 ```bash
 cd /caminho/para/private-skills
 git pull
-./install.sh                          # global
-./install.sh --project ~/meu-projeto  # projeto específico
+./install.sh                                       # Claude Code, global
+./install.sh --opencode                            # OpenCode, global
+./install.sh --project ~/meu-projeto               # Claude Code, projeto
+./install.sh --opencode --project ~/meu-projeto    # OpenCode, projeto
 ```
 
 O script detecta automaticamente o que mudou e atualiza apenas os arquivos necessários.
@@ -106,39 +124,41 @@ O script detecta automaticamente o que mudou e atualiza apenas os arquivos neces
 ## Desinstalação
 
 ```bash
-./install.sh --uninstall                          # remove da instalação global
-./install.sh --uninstall --project ~/meu-projeto  # remove de um projeto
-./install.sh --uninstall --project                # interativo (pergunta o path)
+./install.sh --uninstall                                       # Claude global
+./install.sh --uninstall --opencode                            # OpenCode global
+./install.sh --uninstall --project ~/meu-projeto               # Claude, projeto
+./install.sh --uninstall --opencode --project ~/meu-projeto    # OpenCode, projeto
+./install.sh --uninstall --project                             # interativo
 ```
 
 ---
 
 ## Como funciona
 
-Cada skill é um arquivo `.md` que instrui o Claude Code sobre como se comportar quando o comando é invocado. Não há subagentes, não há arquivos intermediários de planejamento — o Claude executa diretamente na conversa.
+Cada skill é um arquivo `.md` que instrui o agente sobre como se comportar quando o comando é invocado. Não há subagentes, não há arquivos intermediários de planejamento — o agente executa diretamente na conversa.
 
-**Mini-plano:** os comandos `/private-task`, `/private-fix` e `/private-doc` apresentam um plano inline na conversa antes de executar, para tarefas não-triviais. O plano fica na conversa — não cria arquivos em disco. Você aprova antes de qualquer mudança ser feita.
+**Mini-plano:** os comandos `/private-task`, `/private-fix` e `/private-doc` apresentam um plano inline antes de executar, para tarefas não-triviais. O plano fica na conversa — não cria arquivos em disco. Você aprova antes de qualquer mudança ser feita.
 
-**Estado de sessão (efêmero):** o `/private-end` salva um arquivo `.session.md` na raiz do projeto com o resumo do que foi feito, pendências e decisões. O `/private-start` lê esse arquivo para retomar o contexto na próxima sessão. Por padrão, o `.session.md` é **gitignorado** — gera ruído em PRs e pode conter notas pessoais. Versionar é opt-in.
+**Estado de sessão (efêmero — `.session.md`):** o `/private-end` salva um arquivo `.session.md` na raiz do projeto com o resumo do que foi feito, pendências e decisões. O `/private-start` lê esse arquivo para retomar o contexto. Sobrescrito a cada sessão. **Gitignorado por padrão.**
 
-**Memória persistente (duradoura):** os skills também alimentam a memória persistente do Claude Code (`~/.claude/projects/<projeto>/memory/`) com fatos que sobrevivem entre sessões: o que o projeto faz, decisões arquiteturais, preferências do usuário e referências externas. Estado da última sessão **não** vai para lá — isso é o `.session.md`.
+**Memória portátil (duradoura — `.agent-memory.md`):** fatos que sobrevivem entre sessões — o que o projeto faz, decisões arquiteturais, preferências do usuário, referências externas. Incremental (não sobrescrito). Funciona em **qualquer harness**. **Gitignorado por padrão.**
+
+**Memória nativa do Claude Code (opcional):** quando rodando em Claude Code, `/private-end` também espelha fatos relevantes em `~/.claude/projects/<projeto>/memory/`. Em OpenCode/Cursor/Aider, o `.agent-memory.md` é a fonte canônica.
 
 ---
 
-## Relação com skills nativos do Claude Code
+## Relação com skills nativos
 
-O Claude Code já oferece skills nativos como `/init` (gera `CLAUDE.md`), `/review` e `/security-review`. Os comandos `/private-*` **coexistem** com eles e cobrem casos parcialmente sobrepostos:
+Cada harness já oferece skills próprios — `/init`, `/review`, `/security-review` no Claude Code; comandos similares no OpenCode. Os `/private-*` **coexistem** sem conflito:
 
 | Caso | Use o nativo | Use o privado |
 |---|---|---|
-| Gerar `CLAUDE.md` rapidamente em projeto novo | `/init` | `/private-create` (em PT-BR, com fluxo de perguntas e estados A/B/C) |
-| Revisar PR/branch antes de mergear | `/review` | — |
-| Auditoria de segurança em mudanças pendentes | `/security-review` | — |
+| Gerar `AGENTS.md`/`CLAUDE.md` rapidamente em projeto novo | `/init` (Claude Code) | `/private-create` (PT-BR, fluxo de estados A/B/C/D) |
+| Revisar PR/branch antes de mergear | `/review` (Claude Code) | — |
+| Auditoria de segurança em mudanças pendentes | `/security-review` (Claude Code) | — |
 | Revisão local pré-commit (segurança + corretude + qualidade + consistência) | — | `/private-review` |
-| Fluxo coeso de início/fim de sessão com `.session.md` e memória | — | `/private-start` + `/private-end` |
+| Fluxo coeso de início/fim de sessão com `.session.md` e `.agent-memory.md` | — | `/private-start` + `/private-end` |
 | Mini-plano em PT-BR antes de implementar feature/fix | — | `/private-task` + `/private-fix` |
-
-Não há conflito: ambos os conjuntos ficam disponíveis simultaneamente.
 
 ---
 
@@ -146,7 +166,7 @@ Não há conflito: ambos os conjuntos ficam disponíveis simultaneamente.
 
 ```
 private-skills/
-├── skills/
+├── skills/                  # fonte única (8 skills .md)
 │   ├── private-start.md
 │   ├── private-create.md
 │   ├── private-task.md
@@ -155,8 +175,12 @@ private-skills/
 │   ├── private-doc.md
 │   ├── private-review.md
 │   └── private-end.md
-├── install.sh
-├── CLAUDE.md
+├── docs/
+│   ├── USAGE-CLAUDE.md      # guia detalhado para Claude Code
+│   └── USAGE-OPENCODE.md    # guia detalhado para OpenCode
+├── install.sh               # instalador (Claude Code + OpenCode)
+├── AGENTS.md                # spec do meta-projeto (lida pelos agentes)
+├── CLAUDE.md → AGENTS.md    # symlink (retrocompatibilidade)
 ├── CHANGELOG.md
 ├── LICENSE
 └── README.md
@@ -166,11 +190,14 @@ private-skills/
 
 ## Customização
 
-Os skills são arquivos Markdown simples com frontmatter YAML (`name`, `description`) seguido do corpo. Para ajustar o comportamento de qualquer comando, edite o arquivo correspondente em `~/.claude/skills/` (instalação global) ou `.claude/skills/` (instalação por projeto).
+Os skills são arquivos Markdown simples com frontmatter YAML (`name`, `description`) seguido do corpo. Para ajustar o comportamento de qualquer comando, edite o arquivo correspondente no destino instalado:
 
-Por exemplo, para mudar o formato do briefing do `/private-start`, edite `~/.claude/skills/private-start.md` diretamente.
+- Claude Code global: `~/.claude/skills/<nome>.md`
+- Claude Code projeto: `<PROJ>/.claude/skills/<nome>.md`
+- OpenCode global: `~/.config/opencode/command/<nome>.md`
+- OpenCode projeto: `<PROJ>/.opencode/command/<nome>.md`
 
-> **Atenção:** o frontmatter (`---name:...---`) é obrigatório. Sem ele, o Claude Code não registra o arquivo como skill invocável.
+> **Atenção:** o frontmatter (`---\nname: ...\ndescription: ...\n---`) é obrigatório no Claude Code. Sem ele o harness não registra o arquivo como skill invocável. O OpenCode aceita arquivos com ou sem frontmatter — `description` aparece no menu `/`.
 
 ---
 
@@ -182,6 +209,7 @@ Para alterações no próprio repositório:
 2. Bump de versão em `install.sh` (constante `VERSION`).
 3. Adicione entrada em `CHANGELOG.md` seguindo Keep a Changelog.
 4. Rode `bash -n install.sh && ./install.sh --help` antes de commitar.
+5. Se acrescentar/remover comandos, atualize também os guias em `docs/USAGE-*.md`.
 
 ---
 

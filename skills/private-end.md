@@ -1,11 +1,11 @@
 ---
 name: private-end
-description: Encerramento de sessão — escreve `.session.md` com estado atual e pendências, e atualiza a memória persistente do harness com fatos duradouros. Use quando o usuário invocar `/private-end`, ao terminar o trabalho do dia ou ao pausar o projeto por um período.
+description: Encerramento de sessão — escreve `.session.md` (estado efêmero) e atualiza `.agent-memory.md` (memória portátil duradoura). No Claude Code, espelha opcionalmente para a memória nativa do harness. Use quando o usuário invocar `/private-end`, ao terminar o trabalho do dia ou ao pausar o projeto por um período.
 ---
 
 # private-end
 
-Comando de encerramento de sessão. Salva o contexto efêmero em `.session.md` (no projeto) e o contexto duradouro na memória persistente do harness (`~/.claude/...`).
+Comando de encerramento de sessão. Salva o estado efêmero da sessão em `.session.md` e fatos duradouros em `.agent-memory.md` (portátil entre harnesses). No Claude Code, espelha opcionalmente para a memória nativa em `~/.claude/...`.
 
 ## Quando usar
 Ao terminar o trabalho do dia ou ao pausar o projeto por um período.
@@ -53,29 +53,67 @@ Crie ou sobrescreva o arquivo `.session.md` na raiz do projeto com este formato:
 
 Se o arquivo já existir, **sobrescreva** — não acumule sessões no mesmo arquivo. O histórico fica no git (se commitado) ou na memória persistente.
 
-### Passo 4 — Garantir que `.session.md` está gitignorado
+### Passo 4 — Garantir que `.session.md` e `.agent-memory.md` estão gitignorados
 
-Por padrão, `.session.md` é estado de sessão pessoal e **não deve ser commitado** (gera ruído em PRs e pode vazar notas internas).
+Por padrão, esses arquivos são estado pessoal e **não devem ser commitados** (geram ruído em PRs e podem vazar notas internas).
 
 - Verifique se existe `.gitignore` na raiz; crie um se não existir
-- Se `.session.md` ainda não estiver listado, adicione a linha `.session.md`
-- Se o usuário preferir versionar (ex: projeto solo, quer histórico de sessões no git), pergunte uma única vez e respeite a escolha — registre na memória persistente para não perguntar de novo
+- Se `.session.md` ou `.agent-memory.md` ainda não estiverem listados, adicione as linhas correspondentes
+- Se o usuário preferir versionar (ex: projeto solo, quer histórico no git), pergunte uma única vez e respeite a escolha — registre essa preferência em `.agent-memory.md` para não perguntar de novo
 
-### Passo 5 — Atualizar memória persistente
+### Passo 5 — Atualizar memória portátil em `.agent-memory.md`
 
-A memória persistente do harness fica em `~/.claude/projects/<projeto>/memory/` e sobrevive entre sessões. Diferente do `.session.md` (que é estado efêmero da última sessão), aqui só entram **fatos duradouros**:
+`.agent-memory.md` fica na raiz do projeto consumidor e contém **fatos duradouros**, sobrevivendo entre sessões e funcionando em qualquer harness (Claude Code, OpenCode, Cursor, Aider). Diferente do `.session.md` (sobrescrito a cada sessão), o `.agent-memory.md` é **incremental**: você atualiza/adiciona, não substitui.
 
-- O que o projeto faz (memória `project`, se ainda não estiver salvo)
-- Decisões arquiteturais relevantes tomadas hoje (memória `project`)
-- Preferências do usuário identificadas (ex: "quer mensagens de commit em PT-BR") (memória `feedback`)
-- Referências externas (ex: "tickets ficam no Linear projeto X") (memória `reference`)
+Estrutura recomendada:
 
-**Não salve em memória persistente:**
+```markdown
+# Memória do projeto
+
+> Fatos duradouros sobre este projeto. Atualizado pelo `/private-end`.
+> Lido pelo `/private-start` em sessões futuras.
+
+## Sobre o projeto
+[O que faz, para quem, restrições principais. Atualize se mudar.]
+
+## Decisões arquiteturais
+- [YYYY-MM-DD] [decisão] — [motivo / contexto]
+- [YYYY-MM-DD] [decisão] — [motivo / contexto]
+
+## Preferências do usuário
+- [preferência identificada — ex: "mensagens de commit em PT-BR"]
+- [preferência — ex: "evita comentários em código"]
+
+## Referências externas
+- [Linear / Jira / Notion / etc — onde achar contexto adicional]
+
+## Observações
+- [bugs conhecidos, limitações, dependências externas]
+```
+
+**O que entra:**
+- O que o projeto faz (atualize se mudar)
+- Decisões arquiteturais relevantes tomadas hoje (com data)
+- Preferências do usuário identificadas (ex: "quer mensagens de commit em PT-BR")
+- Referências externas (ex: "tickets ficam no Linear projeto X")
+
+**O que NÃO entra:**
 - Estado da sessão (commits feitos, branch atual, pendências) → isso é `.session.md`
 - O que pode ser inferido relendo o código ou o `git log`
 - Detalhes efêmeros da conversa atual
 
-### Passo 6 — Confirmar encerramento
+### Passo 6 — (Apenas Claude Code) Atualizar memória nativa do harness
+
+Se estiver rodando em **Claude Code**, espelhe os fatos duradouros relevantes no sistema de memória nativo (`~/.claude/projects/<projeto>/memory/`), respeitando os tipos:
+
+- `project` — sobre o projeto e decisões arquiteturais
+- `feedback` — preferências do usuário
+- `reference` — referências externas
+- `user` — informações sobre o usuário (papel, expertise)
+
+Em **OpenCode** ou outros harnesses sem memória nativa, **pule este passo** — o `.agent-memory.md` já é a fonte canônica.
+
+### Passo 7 — Confirmar encerramento
 
 ```
 ## Sessão encerrada
@@ -83,13 +121,15 @@ A memória persistente do harness fica em `~/.claude/projects/<projeto>/memory/`
 **Duração:** [se souber]
 **Commits desta sessão:** [quantidade]
 **Arquivo salvo:** `.session.md`
-**Memória atualizada:** sim
+**Memória portátil:** `.agent-memory.md` [atualizado / sem mudanças]
+**Memória do harness:** [atualizada / n/a]
 
 Até a próxima. Use `/private-start` para retomar.
 ```
 
 ## Notas
-- `.session.md` = estado **efêmero** da última sessão (sobrescrito a cada `/private-end`); memória persistente = fatos **duradouros** sobre projeto/usuário
-- Por padrão, `.session.md` fica gitignorado — versionar é opt-in
+- `.session.md` = estado **efêmero** da última sessão (sobrescrito a cada `/private-end`); `.agent-memory.md` = fatos **duradouros** sobre projeto/usuário (incremental)
+- `.agent-memory.md` é portátil entre harnesses; memória nativa do Claude Code é um espelho opcional, não a fonte canônica
+- Por padrão, ambos ficam gitignorados — versionar é opt-in
 - Seja específico no "o que foi feito" — "implementei X" é melhor que "trabalhei no projeto"
 - Se houver código não commitado, mencione e pergunte se quer commitar antes de encerrar

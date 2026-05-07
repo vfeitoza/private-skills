@@ -1,6 +1,6 @@
 ---
 name: private-start
-description: Início de sessão de trabalho — lê o estado do projeto (git, stack, .session.md, memória persistente) e apresenta um briefing curto. Use quando o usuário invocar `/private-start` ou ao retomar trabalho em um projeto sem contexto carregado.
+description: Início de sessão de trabalho — lê o estado do projeto (git, stack, `.session.md`, `.agent-memory.md`) e apresenta um briefing curto. Funciona em qualquer harness (Claude Code, OpenCode, etc.). Use quando o usuário invocar `/private-start` ou ao retomar trabalho em um projeto sem contexto carregado.
 ---
 
 # private-start
@@ -14,13 +14,15 @@ No início de qualquer sessão de trabalho em um projeto.
 
 1. **Leia o estado do projeto:**
    - Verifique se existe `.session.md` no diretório atual — se sim, leia e apresente o resumo
+   - Verifique se existe `.agent-memory.md` no diretório atual — se sim, leia (memória portátil duradoura)
    - Rode `git status` e `git log --oneline -10` para entender onde o projeto está
-   - Leia o `README.md` ou `CLAUDE.md` se existirem
+   - Leia `AGENTS.md` (canônico) ou `CLAUDE.md` (legado/symlink) se existirem
+   - Leia o `README.md` se existir
    - Identifique a stack (package.json, Cargo.toml, go.mod, requirements.txt, etc.)
 
-2. **Consulte a memória:**
-   - Acesse as memórias do projeto atual se existirem
-   - Traga contexto relevante de sessões anteriores
+2. **Consulte a memória nativa do harness (apenas Claude Code):**
+   - Se rodando em Claude Code, acesse as memórias em `~/.claude/projects/<projeto>/memory/`
+   - Em outros harnesses (OpenCode, Cursor, Aider, etc.), pule este passo — `.agent-memory.md` já cobre o contexto duradouro
 
 3. **Apresente um briefing curto:**
    ```
@@ -33,6 +35,8 @@ No início de qualquer sessão de trabalho em um projeto.
 
    **Contexto anterior:** [resumo do .session.md se existir, ou "primeira sessão"]
 
+   **Memória do projeto:** [resumo de 1-2 linhas do .agent-memory.md, ou "vazia"]
+
    **Pendências identificadas:** [lista do .session.md ou "nenhuma"]
 
    Pronto. O que vamos fazer hoje?
@@ -42,5 +46,7 @@ No início de qualquer sessão de trabalho em um projeto.
 
 ## Notas
 - Se não houver `.session.md`, diga que é a primeira sessão registrada no projeto
+- Se não houver `.agent-memory.md`, mencione que será criado no primeiro `/private-end`
+- Prefira `AGENTS.md` a `CLAUDE.md` (são o mesmo arquivo se for symlink, mas em projetos legados pode ser diferente)
 - Se o repo estiver sujo (uncommitted changes), mencione os arquivos modificados
 - Seja breve — o briefing deve caber em uma tela

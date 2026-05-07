@@ -4,6 +4,26 @@ Todas as mudanças relevantes em `private-skills` são documentadas neste arquiv
 
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o projeto adota [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [0.4.0] — 2026-05-07
+
+### Added
+- **Suporte ao OpenCode (sst/opencode):** novas flags `--opencode` e `--opencode --project [PATH]` no instalador. Mesma fonte (`skills/`); apenas o destino muda (`~/.config/opencode/command/` ou `<PROJ>/.opencode/command/`).
+- **Memória portátil em `.agent-memory.md`:** novo arquivo na raiz do projeto consumidor com fatos duradouros (decisões arquiteturais, preferências, referências). Funciona em qualquer harness. Lido por `/private-start` e atualizado por `/private-end`.
+- **Symlink `CLAUDE.md → AGENTS.md`** no próprio repositório, adotando o padrão cross-tool [agents.md](https://agents.md). `private-create` agora gera `AGENTS.md` por padrão e oferece o symlink como retrocompatibilidade com Claude Code.
+- **Estado D no `private-create`:** novo fluxo "projeto existente com `AGENTS.md`"; estado C virou "projeto legado só com `CLAUDE.md`" (oferece migração para `AGENTS.md` + symlink).
+- **Guias detalhados de uso por harness:** `docs/USAGE-CLAUDE.md` e `docs/USAGE-OPENCODE.md` com exemplos por comando.
+- `.gitignore` cobrindo também `.agent-memory.md`.
+
+### Changed
+- `private-start`: agora também lê `.agent-memory.md` e prefere `AGENTS.md` a `CLAUDE.md`.
+- `private-end`: separa claramente memória portátil (`.agent-memory.md`, sempre) de memória nativa do Claude Code (espelhamento opcional). Em OpenCode/Cursor/Aider, o `.agent-memory.md` é a fonte canônica.
+- `install.sh`: estrutura interna refatorada para suportar múltiplos harnesses (`HARNESS_LABEL`, `GLOBAL_TARGET` e `PROJECT_SUBDIR` resolvidos por harness). Help reescrito.
+- `README.md`: tabela de compatibilidade com harnesses, comandos de instalação para Claude Code e OpenCode lado a lado, links para os guias detalhados.
+- Meta-projeto: `CLAUDE.md` deste repo virou symlink para `AGENTS.md` (preservando histórico via `git mv`).
+
+### Notes
+- A fonte de skills permanece em `skills/` (decisão de arquitetura: um arquivo serve aos dois harnesses).
+
 ## [0.3.0] — 2026-05-07
 
 ### Added

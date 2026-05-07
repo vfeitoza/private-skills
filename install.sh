@@ -4,21 +4,27 @@ set -euo pipefail
 # =============================================================================
 # private-skills — instalador
 # =============================================================================
-# Instala os skills do private-flow no Claude Code.
+# Instala os skills do private-flow em Claude Code ou OpenCode.
 #
 # Modos:
-#   ./install.sh                       — instala globalmente (~/.claude/skills/)
-#   ./install.sh --project             — instala em um projeto (pergunta o path)
-#   ./install.sh --project <PATH>      — instala em <PATH>/.claude/skills/
-#   ./install.sh --uninstall           — remove a instalação global
-#   ./install.sh --uninstall --project [<PATH>] — remove de um projeto
-#   ./install.sh --help                — exibe ajuda
+#   ./install.sh                              — Claude Code, global
+#   ./install.sh --project [<PATH>]           — Claude Code, projeto
+#   ./install.sh --opencode                   — OpenCode, global
+#   ./install.sh --opencode --project [<PATH>] — OpenCode, projeto
+#   ./install.sh --uninstall [...]            — desinstala (mesmas flags)
+#   ./install.sh --help                       — exibe ajuda
 # =============================================================================
 
-VERSION="0.3.0"
+VERSION="0.4.0"
 
 SKILLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/skills" && pwd)"
-GLOBAL_TARGET="$HOME/.claude/skills"
+
+# Targets por harness
+CLAUDE_GLOBAL_TARGET="$HOME/.claude/skills"
+CLAUDE_PROJECT_SUBDIR=".claude/skills"
+
+OPENCODE_GLOBAL_TARGET="$HOME/.config/opencode/command"
+OPENCODE_PROJECT_SUBDIR=".opencode/command"
 
 # Cores
 RED='\033[0;31m'
@@ -42,32 +48,36 @@ usage() {
   echo ""
   echo "  private-skills installer v${VERSION}"
   echo ""
-  echo "  Uso: ./install.sh [opção] [path]"
+  echo "  Uso: ./install.sh [--opencode] [--project [<PATH>]] [--uninstall]"
   echo ""
-  echo "  Opções:"
-  echo "    (sem opção)        Instala globalmente em ~/.claude/skills/"
-  echo "                       Disponível em todos os projetos"
+  echo "  Harness (escolha um; padrão: Claude Code):"
+  echo "    (sem flag)    Claude Code"
+  echo "    --opencode    OpenCode (sst/opencode)"
   echo ""
-  echo "    --project          Instala em um projeto (.claude/skills/)"
-  echo "                       Sem path, pergunta interativamente:"
-  echo "                         1) usar o diretório atual"
-  echo "                         2) informar outro path"
+  echo "  Escopo:"
+  echo "    (sem flag)         Global"
+  echo "                         Claude Code → ~/.claude/skills/"
+  echo "                         OpenCode    → ~/.config/opencode/command/"
   echo ""
-  echo "    --project <PATH>   Instala em <PATH>/.claude/skills/ (não-interativo)"
-  echo "                       Aceita ~ e paths relativos. Se o diretório não"
-  echo "                       existir, pergunta antes de criar."
+  echo "    --project          Projeto (interativo: atual ou outro path)"
+  echo "    --project <PATH>   Projeto em <PATH>"
+  echo "                         Claude Code → <PATH>/.claude/skills/"
+  echo "                         OpenCode    → <PATH>/.opencode/command/"
   echo ""
-  echo "    --uninstall                 Remove da instalação global"
-  echo "    --uninstall --project [<PATH>]  Remove da instalação de um projeto"
+  echo "  Modo:"
+  echo "    (sem flag)    Instala / atualiza"
+  echo "    --uninstall   Remove os skills do destino selecionado"
   echo ""
-  echo "    --version          Exibe a versão e sai"
-  echo "    --help             Exibe esta mensagem"
+  echo "  Outros:"
+  echo "    --version     Exibe a versão e sai"
+  echo "    --help        Exibe esta mensagem"
   echo ""
   echo "  Exemplos:"
-  echo "    ./install.sh                              # global"
-  echo "    ./install.sh --project                    # interativo"
-  echo "    ./install.sh --project ~/Projetos/api     # direto"
-  echo "    ./install.sh --project .                  # diretório atual"
+  echo "    ./install.sh                                  # Claude Code, global"
+  echo "    ./install.sh --opencode                       # OpenCode, global"
+  echo "    ./install.sh --project ~/Projetos/api         # Claude Code, projeto direto"
+  echo "    ./install.sh --opencode --project .           # OpenCode, dir atual"
+  echo "    ./install.sh --uninstall --opencode --project ~/api"
   echo ""
 }
 
@@ -258,6 +268,7 @@ uninstall_skills() {
 
 MODE="install"
 SCOPE="global"
+HARNESS="claude"
 PROJECT_PATH=""
 
 while [ $# -gt 0 ]; do
@@ -269,6 +280,12 @@ while [ $# -gt 0 ]; do
     --version|-v)
       echo "private-skills v${VERSION}"
       exit 0
+      ;;
+    --opencode)
+      HARNESS="opencode"
+      ;;
+    --claude)
+      HARNESS="claude"
       ;;
     --project)
       SCOPE="project"
@@ -292,19 +309,22 @@ done
 
 check_skills_dir
 
+# Resolve o destino conforme harness + escopo
+case "$HARNESS" in
+  claude)   HARNESS_LABEL="Claude Code"; GLOBAL_TARGET="$CLAUDE_GLOBAL_TARGET"; PROJECT_SUBDIR="$CLAUDE_PROJECT_SUBDIR" ;;
+  opencode) HARNESS_LABEL="OpenCode";    GLOBAL_TARGET="$OPENCODE_GLOBAL_TARGET"; PROJECT_SUBDIR="$OPENCODE_PROJECT_SUBDIR" ;;
+esac
+
 if [ "$SCOPE" = "global" ]; then
   TARGET="$GLOBAL_TARGET"
-  SCOPE_LABEL="(global — todos os projetos)"
+  SCOPE_LABEL="(${HARNESS_LABEL}, global — todos os projetos)"
 else
-  # Resolve o path do projeto
   if [ -z "$PROJECT_PATH" ]; then
     PROJECT_PATH="$(prompt_project_path)"
   else
     PROJECT_PATH="$(expand_path "$PROJECT_PATH")"
   fi
 
-  # Para instalação, garante que o diretório base existe;
-  # para desinstalação, exige que já exista
   if [ "$MODE" = "install" ]; then
     ensure_project_dir "$PROJECT_PATH"
   elif [ ! -d "$PROJECT_PATH" ]; then
@@ -312,8 +332,8 @@ else
     exit 1
   fi
 
-  TARGET="$PROJECT_PATH/.claude/skills"
-  SCOPE_LABEL="(projeto: $PROJECT_PATH)"
+  TARGET="$PROJECT_PATH/$PROJECT_SUBDIR"
+  SCOPE_LABEL="(${HARNESS_LABEL}, projeto: $PROJECT_PATH)"
 fi
 
 if [ "$MODE" = "install" ]; then
